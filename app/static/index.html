@@ -1,0 +1,490 @@
+<!doctype html>
+<!-- filepath: c:\Study\RAG\RBAC\ds-rpc-01\app\static\index.html -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>RBAC RAG Chat</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    /* Login Screen */
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .login-container.hidden { display: none; }
+
+    .login-header {
+      margin-bottom: 20px;
+    }
+
+    .login-header h1 {
+      font-size: 28px;
+      color: #667eea;
+      margin-bottom: 8px;
+    }
+
+    .login-header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: left;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      background: #f8f9ff;
+    }
+
+    .login-btn {
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .login-btn:active { transform: translateY(0); }
+
+    .error-msg {
+      color: #e74c3c;
+      font-size: 14px;
+      background: #ffe0e0;
+      padding: 10px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    /* Chat Screen */
+    .chat-container {
+      display: none;
+      width: 100%;
+      max-width: 900px;
+      height: 90vh;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-container.active { display: flex; }
+
+    .chat-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .user-details h2 {
+      font-size: 16px;
+      margin: 0;
+    }
+
+    .user-details p {
+      font-size: 12px;
+      opacity: 0.9;
+      margin: 0;
+    }
+
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    .messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #f8f9fa;
+    }
+
+    .message {
+      display: flex;
+      gap: 10px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user-msg { justify-content: flex-end; }
+
+    .message-bubble {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      word-wrap: break-word;
+      line-height: 1.4;
+      font-size: 14px;
+    }
+
+    .message.bot-msg .message-bubble {
+      background: #e8eaf6;
+      color: #333;
+      border-left: 3px solid #667eea;
+    }
+
+    .message.user-msg .message-bubble {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-right: 3px solid #667eea;
+    }
+
+    .compose-area {
+      padding: 16px 20px;
+      background: white;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    #messageInput {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: none;
+      max-height: 100px;
+      transition: border-color 0.3s;
+    }
+
+    #messageInput:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    #sendBtn {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+
+    #sendBtn:hover { transform: translateY(-2px); }
+    #sendBtn:active { transform: translateY(0); }
+    #sendBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .loading {
+      opacity: 0.6;
+      font-style: italic;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div class="login-container" id="loginContainer">
+    <div class="login-header">
+      <h1>🤖 RBAC RAG Chat</h1>
+      <p>Role-Based Access Control with AI</p>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input id="username" type="text" placeholder="e.g., Tony" />
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="••••••••" />
+    </div>
+
+    <button class="login-btn" id="btnLogin">Login</button>
+
+    <div style="font-size: 12px; color: #999; margin-top: 10px;">
+      <p>Demo users: Tony, Bruce, Sam, Peter, Sid, Natasha</p>
+    </div>
+  </div>
+
+  <!-- Chat Screen -->
+  <div class="chat-container" id="chatContainer">
+    <div class="chat-header">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">T</div>
+        <div class="user-details">
+          <h2 id="displayUsername">Username</h2>
+          <p>Role: <span id="displayRole">role</span></p>
+        </div>
+      </div>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="messages-area" id="messages"></div>
+
+    <div class="compose-area">
+      <textarea id="messageInput" placeholder="Type your message..." rows="1"></textarea>
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const loginContainer = document.getElementById('loginContainer');
+    const chatContainer = document.getElementById('chatContainer');
+    const btnLogin = document.getElementById('btnLogin');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const usernameEl = document.getElementById('username');
+    const passwordEl = document.getElementById('password');
+    const errorMsg = document.getElementById('errorMsg');
+    const messagesEl = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const displayUsername = document.getElementById('displayUsername');
+    const displayRole = document.getElementById('displayRole');
+    const userAvatar = document.getElementById('userAvatar');
+
+    let authHeader = null;
+    let currentUser = null;
+    let currentRole = null;
+
+    // Auto-resize textarea
+    messageInput.addEventListener('input', () => {
+      messageInput.style.height = 'auto';
+      messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
+    });
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.add('show');
+      setTimeout(() => errorMsg.classList.remove('show'), 5000);
+    }
+
+    function appendMessage(text, sender = 'bot') {
+      const d = document.createElement('div');
+      d.className = `message ${sender === 'user' ? 'user-msg' : 'bot-msg'}`;
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble';
+      bubble.textContent = text;
+      d.appendChild(bubble);
+      messagesEl.appendChild(d);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function apiCall(path, options = {}) {
+      options.headers = options.headers || {};
+      if (authHeader) options.headers['Authorization'] = authHeader;
+      const res = await fetch(path, options);
+      if (res.status === 401) {
+        showError('Unauthorized — check credentials');
+        logout();
+        throw new Error('unauthorized');
+      }
+      return res.json();
+    }
+
+    async function login() {
+      const user = usernameEl.value.trim();
+      const pass = passwordEl.value;
+      if (!user || !pass) {
+        showError('Enter username & password');
+        return;
+      }
+
+      authHeader = 'Basic ' + btoa(user + ':' + pass);
+
+      try {
+        const data = await apiCall('/login');
+        currentUser = user;
+        currentRole = data.role || '';
+        
+        // Update header
+        displayUsername.textContent = currentUser;
+        displayRole.textContent = currentRole;
+        userAvatar.textContent = currentUser[0].toUpperCase();
+
+        // Switch screens
+        loginContainer.classList.remove('active');
+        chatContainer.classList.add('active');
+        messageInput.focus();
+
+        messagesEl.innerHTML = '';
+        appendMessage(`Welcome ${currentUser}! You're connected as ${currentRole}. How can I help?`, 'bot');
+      } catch (e) {
+        console.error(e);
+        showError('Login failed — check username/password');
+        authHeader = null;
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      currentRole = null;
+      authHeader = null;
+      usernameEl.value = '';
+      passwordEl.value = '';
+      messagesEl.innerHTML = '';
+      errorMsg.classList.remove('show');
+
+      chatContainer.classList.remove('active');
+      loginContainer.classList.add('active');
+      usernameEl.focus();
+    }
+
+    async function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      appendMessage(text, 'user');
+      messageInput.value = '';
+      messageInput.style.height = 'auto';
+      sendBtn.disabled = true;
+
+      const loadingMsg = document.createElement('div');
+      loadingMsg.className = 'message bot-msg';
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble loading';
+      bubble.textContent = 'Thinking...';
+      loadingMsg.appendChild(bubble);
+      messagesEl.appendChild(loadingMsg);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      try {
+        const url = '/chat?message=' + encodeURIComponent(text);
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Authorization': authHeader }
+        });
+        if (res.status === 401) {
+          showError('Unauthorized');
+          logout();
+          return;
+        }
+        const data = await res.json();
+        loadingMsg.remove();
+        const botReply = data.response || 'No response';
+        appendMessage(botReply, 'bot');
+      } catch (err) {
+        loadingMsg.remove();
+        appendMessage('Error contacting server', 'bot');
+        console.error(err);
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    btnLogin.onclick = login;
+    logoutBtn.onclick = logout;
+    sendBtn.onclick = sendMessage;
+
+    usernameEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') login();
+    });
+
+    passwordEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') login();
+    });
+
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Start with login screen visible
+    loginContainer.classList.add('active');
+    usernameEl.focus();
+  </script>
+</body>
+</html>
