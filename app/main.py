@@ -131,8 +131,7 @@ def create_rag_response(documents: str, user_message: str) -> str:
         embeddings = OllamaEmbeddings(model="nomic-embed-text")
         vector_store = FAISS.from_texts(chunks, embeddings)
 
-    # Initialize LLM
-        
+    # Initialize LLM and generate response
 
         # Create RAG response
         relevant_docs = vector_store.similarity_search(user_message, k=3)
